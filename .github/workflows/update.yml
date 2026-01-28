@@ -24,12 +24,18 @@ jobs:
       - name: Run scraper
         run: python scraper.py
 
-      - name: Commit index.html
+      - name: Commit changes if needed
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
-          git add index.html
-          git commit -m "Update index.html" || echo "No changes to commit"
+
+          # Alleen committen als er iets veranderd is
+          if ! git diff --quiet; then
+            git add index.html log.txt
+            git commit -m "Automatische update"
+          else
+            echo "Geen wijzigingen, geen commit"
+          fi
 
       - name: Push changes
         run: git push
