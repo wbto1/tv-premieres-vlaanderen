@@ -1,1 +1,24 @@
-name: Update TV Premieres on: schedule: - cron: "0 6 * * *" workflow_dispatch: jobs: build: runs-on: ubuntu-latest steps: - name: Checkout repo uses: actions/checkout@v3 - name: Setup Python uses: actions/setup-python@v4 with: python-version: "3.11" - name: Install dependencies run: pip install -r requirements.txt - name: Run scraper run: python scraper.py - name: Deploy to GitHub Pages uses: peaceiris/actions-gh-pages@v3 with: github_token: ${{ secrets.GITHUB_TOKEN }} publish_dir: ._dir: 
+name: Update TV Premieres
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run scraper
+        run: python scraper.py
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: .
