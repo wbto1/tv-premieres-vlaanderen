@@ -1,6 +1,9 @@
 name: run scraper
+
 on:
-  workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * *"   # elke dag om 06:00
+  workflow_dispatch:       # handmatig starten blijft mogelijk
 
 jobs:
   build:
