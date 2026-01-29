@@ -4,7 +4,6 @@ from datetime import datetime
 
 URL = "https://www.vrt.be/vrtmax/tv-gids/"
 
-# Woorden die vaak gebruikt worden om premières aan te duiden
 PREMIERE_KEYWORDS = [
     "première",
     "eerste uitzending",
@@ -16,15 +15,24 @@ PREMIERE_KEYWORDS = [
 ]
 
 
+def log(tekst):
+    with open("log.txt", "a", encoding="utf-8") as f:
+        f.write(tekst + "\n")
+
+
 def haal_programmas_op():
+    log("Start scraping...")
+
     response = requests.get(URL)
     response.raise_for_status()
     soup = BeautifulSoup(response.text, "html.parser")
 
     programma_lijst = []
 
-    # VRT MAX gebruikt <article> blokken voor programma's
-    for blok in soup.find_all("article"):
+    artikelen = soup.find_all("article")
+    log(f"Gevonden artikelen: {len(artikelen)}")
+
+    for blok in artikelen:
         titel_tag = blok.find("h3")
         beschrijving_tag = blok.find("p")
 
@@ -39,6 +47,7 @@ def haal_programmas_op():
             "beschrijving": beschrijving
         })
 
+    log(f"Totaal programma's gevonden: {len(programma_lijst)}")
     return programma_lijst
 
 
@@ -48,16 +57,14 @@ def detecteer_premieres(programmas):
     for p in programmas:
         tekst = (p["titel"] + " " + p["beschrijving"]).lower()
 
-        # Zoek naar premiere-keywords
         if any(keyword in tekst for keyword in PREMIERE_KEYWORDS):
             premieres.append(p)
+            continue
 
-        # Extra heuristiek: films van dit jaar
-        if "2024" in tekst or "2025" in tekst or "2026" in tekst:
-            if "film" in tekst or "thriller" in tekst or "drama" in tekst:
+        if any(str(jaar) in tekst for jaar in range(2024, 2027)):
+            if any(genre in tekst for genre in ["film", "thriller", "drama"]):
                 premieres.append(p)
 
-    # Dubbele verwijderen
     unieke = []
     seen = set()
 
@@ -66,28 +73,28 @@ def detecteer_premieres(programmas):
             unieke.append(p)
             seen.add(p["titel"])
 
+    log(f"Premières gevonden: {len(unieke)}")
     return unieke
 
 
 def genereer_html(premieres):
     datum = datetime.now().strftime("%d/%m/%Y")
 
-    html = f"""
-    <html>
-    <head>
-        <meta charset="utf-8">
-        <title>TV Premieres Vlaanderen</title>
-        <style>
-            body {{ font-family: Arial; padding: 20px; }}
-            h1 {{ color: #333; }}
-            li {{ margin-bottom: 12px; }}
-        </style>
-    </head>
-    <body>
-        <h1>TV-premières in Vlaanderen</h1>
-        <p>Laatst bijgewerkt: {datum}</p>
-        <ul>
-    """
+    html = f"""<html>
+<head>
+<meta charset="utf-8">
+<title>TV Premieres Vlaanderen</title>
+<style>
+body {{ font-family: Arial; padding: 20px; }}
+h1 {{ color: #333; }}
+li {{ margin-bottom: 12px; }}
+</style>
+</head>
+<body>
+<h1>TV-premières in Vlaanderen</h1>
+<p>Laatst bijgewerkt: {datum}</p>
+<ul>
+"""
 
     if premieres:
         for p in premieres:
@@ -95,17 +102,20 @@ def genereer_html(premieres):
     else:
         html += "<li>Geen premières gevonden vandaag.</li>"
 
-    html += """
-        </ul>
-    </body>
-    </html>
-    """
+    html += "</ul></body></html>"
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html)
 
+    log("HTML gegenereerd.")
+
 
 if __name__ == "__main__":
+    open("log.txt", "w").close()
+
     programmas = haal_programmas_op()
     premieres = detecteer_premieres(programmas)
     genereer_html(premieres)
+
+    log("Scraper vol
+    tooid.")
