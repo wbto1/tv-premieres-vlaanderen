@@ -31,15 +31,12 @@ jobs:
 
           # Alleen committen als er iets veranderd is
           if ! git diff --quiet; then
-            # Alleen bestanden toevoegen als ze bestaan
             if [ -f index.html ]; then git add index.html; fi
             if [ -f log.txt ]; then git add log.txt; fi
-
             git commit -m "Automatische update"
           else
             echo "Geen wijzigingen, geen commit"
           fi
 
       - name: Push changes
-        run:
-        git push
+        run: git push
