@@ -2,7 +2,7 @@ name: Fetch TV Premieres
 
 on:
   schedule:
-    - cron: "0 6 * * *"   # elke dag om 06:00 UTC
+    - cron: "0 6 * * *"
   workflow_dispatch:
 
 jobs:
@@ -30,7 +30,6 @@ jobs:
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
-
           if ! git diff --quiet; then
             git add data/tv-premieres.json
             git commit -m "Automatische update van tv-premières"
@@ -39,5 +38,5 @@ jobs:
           fi
 
       - name: Push changes
-        run: 
-        git push
+        run: git push
+        
