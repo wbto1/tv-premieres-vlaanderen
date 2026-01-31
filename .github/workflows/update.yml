@@ -1,26 +1,27 @@
-name: run scraper
+name: Fetch TV Premieres
 
 on:
   schedule:
-    - cron: '0 6 * * *'
+    - cron: "0 6 * * *"   # elke dag om 06:00 UTC
   workflow_dispatch:
 
 jobs:
-  build:
+  fetch:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Setup Python
-        uses: actions/setup-python@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          python-version: '3.11'
+          node-version: "20"
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: npm install
 
       - name: Run scraper
         run: node scripts/fetch-tv-premieres.js
@@ -29,17 +30,14 @@ jobs:
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
+
           if ! git diff --quiet; then
-            if [ -f index.html ]; then git add index.html; fi
-            if [ -f log.txt ]; then git add log.txt; fi
-            git commit -m "Automatische update"
+            git add data/tv-premieres.json
+            git commit -m "Automatische update van tv-premières"
           else
             echo "Geen wijzigingen, geen commit"
           fi
 
-      - name: Pull latest changes
-        run: git pull --rebase
-
       - name: Push changes
-        run: git push
-        
+        run: 
+        git push
