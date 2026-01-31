@@ -1,51 +1,53 @@
 import fs from "fs";
 import path from "path";
 import fetch from "node-fetch";
+import xml2js from "xml2js";
 
-// TODO: VERVANG DIT DOOR JOUW ECHTE EPG-BRON
-const EPG_URL = "https://example.com/epg.json";
+const EPG_URL = "https://www.xmltv.be/tvguide.xml";
 
-// Bepalen of een programma een première is
 function isPremiere(program) {
+  const title = program.title?.[0]?._ || "";
+  const desc = program.desc?.[0]?._ || "";
+
   return (
-    program.isPremiere === true ||
-    /première/i.test(program.title || "") ||
-    /premiere/i.test(program.description || "")
+    /première/i.test(title) ||
+    /premiere/i.test(title) ||
+    /première/i.test(desc) ||
+    /premiere/i.test(desc)
   );
 }
 
-// JSON ophalen
-async function fetchJson(url) {
+async function fetchXml(url) {
   const res = await fetch(url);
   if (!res.ok) throw new Error(`HTTP ${res.status} bij ${url}`);
-  return res.json();
+  return res.text();
 }
 
 async function main() {
   console.log("EPG ophalen…");
-  const epg = await fetchJson(EPG_URL);
+  const xml = await fetchXml(EPG_URL);
 
+  console.log("XML omzetten naar JSON…");
+  const parser = new xml2js.Parser();
+  const epg = await parser.parseStringPromise(xml);
+
+  const programmes = epg.tv.programme || [];
   const premieres = [];
 
-  // Verwacht structuur: { channels: [ { name, programs: [...] } ] }
-  for (const channel of epg.channels || []) {
-    for (const p of channel.programs || []) {
-      if (isPremiere(p)) {
-        premieres.push({
-          title: p.title,
-          channel: channel.name,
-          start: p.start,
-          end: p.end,
-          description: p.description || "",
-        });
-      }
+  for (const p of programmes) {
+    if (isPremiere(p)) {
+      premieres.push({
+        title: p.title?.[0]?._ || "",
+        channel: p.$.channel,
+        start: p.$.start,
+        stop: p.$.stop,
+        description: p.desc?.[0]?._ || ""
+      });
     }
   }
 
-  // Sorteren op starttijd
   premieres.sort((a, b) => new Date(a.start) - new Date(b.start));
 
-  // Outputmap en bestand
   const outDir = "data";
   const outFile = path.join(outDir, "tv-premieres.json");
 
@@ -56,7 +58,7 @@ async function main() {
     JSON.stringify(
       {
         generatedAt: new Date().toISOString(),
-        premieres,
+        premieres
       },
       null,
       2
@@ -64,7 +66,7 @@ async function main() {
     "utf8"
   );
 
-  console.log(`Klaar! ${premieres.length} premières opgeslagen.`);
+  console.log(`Klaar! ${premieres.length} premières gevonden.`);
 }
 
 main().catch((err) => {
