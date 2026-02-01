@@ -24,27 +24,13 @@ async function run() {
       const result = await parseStringPromise(xml);
       const programmes = result?.tv?.programme ?? [];
 
-      console.log(`Programma’s gevonden in ${url}: ${programmes.length}`);
       allProgrammes = allProgrammes.concat(programmes);
     }
 
-    console.log(`Totaal aantal programma’s: ${allProgrammes.length}`);
-
     const vlaamseZenders = [
-      "één",
-      "canvas",
-      "vtm",
-      "vtm2",
-      "vtm3",
-      "vtm4",
-      "vier",
-      "vijf",
-      "zes",
-      "play4",
-      "play5",
-      "play6",
-      "play7",
-      "vtm gold"
+      "één", "canvas", "vtm", "vtm2", "vtm3", "vtm4",
+      "vier", "vijf", "zes", "play4", "play5", "play6",
+      "play7", "vtm gold"
     ];
 
     const premieres = allProgrammes.filter(p => {
@@ -52,9 +38,6 @@ async function run() {
       return vlaamseZenders.includes(channel);
     });
 
-    console.log(`Aantal Vlaamse programma’s: ${premieres.length}`);
-
-    // Schrijven naar docs/data/
     if (!fs.existsSync("docs/data")) {
       fs.mkdirSync("docs/data", { recursive: true });
     }
@@ -64,9 +47,9 @@ async function run() {
       JSON.stringify(premieres, null, 2)
     );
 
-    console.log("Klaar! docs/data/tv-premieres.json bijgewerkt.");
+    console.log("Klaar! JSON opgeslagen.");
   } catch (err) {
-    console.error("Fout tijdens uitvoeren scraper:", err);
+    console.error("Fout:", err);
     process.exit(1);
   }
 }
