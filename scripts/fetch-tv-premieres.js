@@ -1,25 +1,34 @@
 import { parseStringPromise } from "xml2js";
 import fs from "fs";
 
-const URL = "https://iptv-org.github.io/epg/guides/be.xml";
+const URLS = [
+  "https://iptv-org.github.io/epg/guides/be-vrt.xml",
+  "https://iptv-org.github.io/epg/guides/be-dpg.xml",
+  "https://iptv-org.github.io/epg/guides/be-playtime.xml"
+];
 
 async function run() {
   try {
-    console.log("EPG downloaden...");
-    const response = await fetch(URL);
+    let allProgrammes = [];
 
-    if (!response.ok) {
-      throw new Error(`HTTP-fout: ${response.status}`);
+    for (const url of URLS) {
+      console.log(`EPG downloaden van ${url}...`);
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        console.log(`Fout bij ${url}: ${response.status}`);
+        continue;
+      }
+
+      const xml = await response.text();
+      const result = await parseStringPromise(xml);
+      const programmes = result?.tv?.programme ?? [];
+
+      console.log(`Programma’s gevonden in ${url}: ${programmes.length}`);
+      allProgrammes = allProgrammes.concat(programmes);
     }
 
-    const xml = await response.text();
-
-    console.log("XML parsen...");
-    const result = await parseStringPromise(xml);
-
-    const programmes = result?.tv?.programme ?? [];
-
-    console.log(`Aantal programma’s gevonden: ${programmes.length}`);
+    console.log(`Totaal aantal programma’s: ${allProgrammes.length}`);
 
     const vlaamseZenders = [
       "één",
@@ -38,7 +47,7 @@ async function run() {
       "vtm gold"
     ];
 
-    const premieres = programmes.filter(p => {
+    const premieres = allProgrammes.filter(p => {
       const channel = p.$?.channel?.toLowerCase() ?? "";
       return vlaamseZenders.includes(channel);
     });
