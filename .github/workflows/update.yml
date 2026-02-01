@@ -2,8 +2,8 @@ name: Fetch TV Premieres
 
 on:
   schedule:
-    - cron: "0 6 * * *"
-  workflow_dispatch:
+    - cron: "0 6 * * *"   # elke dag om 06:00 UTC
+  workflow_dispatch:       # handmatig starten via Actions-tab
 
 jobs:
   fetch:
@@ -36,5 +36,5 @@ jobs:
           fi
 
       - name: Push changes
-        run: git push
-        
+        run: g
+        it push
