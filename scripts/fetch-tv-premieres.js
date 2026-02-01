@@ -8,7 +8,11 @@ async function run() {
     console.log("EPG downloaden...");
     const response = await fetch(URL, {
       headers: {
-        "User-Agent": "Mozilla/5.0"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+        "Accept": "text/xml,application/xml,application/xhtml+xml",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Referer": "https://www.tvgids.nl/",
+        "Connection": "keep-alive"
       }
     });
 
