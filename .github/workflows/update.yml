@@ -36,5 +36,4 @@ jobs:
           fi
 
       - name: Push changes
-        run: g
-        it push
+        run: git push
