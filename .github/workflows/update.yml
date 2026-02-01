@@ -13,27 +13,28 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          python-version: "3.11"
+          node-version: "20"
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: npm install
 
       - name: Run scraper
-        run: python scraper.py
+        run: npm run fetch
 
       - name: Commit changes if needed
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
           if ! git diff --quiet; then
-            git add index.html
+            git add docs/data/tv-premieres.json
             git commit -m "Automatische update van tv-premières"
           else
-            echo "Geen wijzigingen, geen commit"
+            echo "Geen wijzigingen"
           fi
 
       - name: Push changes
         run: git push
+        
