@@ -1,6 +1,5 @@
 import fs from "fs";
 import path from "path";
-import fetch from "node-fetch";
 import xml2js from "xml2js";
 
 const EPG_URL = "https://iptv-org.github.io/epg/guides/be.xml";
