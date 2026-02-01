@@ -1,74 +1,64 @@
+import { parseStringPromise } from "xml2js";
 import fs from "fs";
-import path from "path";
-import xml2js from "xml2js";
+import fetch from "node-fetch"; // mag blijven staan, Node 20 ondersteunt fetch ook zonder dit
 
-const EPG_URL = "https://iptv-org.github.io/epg/guides/be.xml";
+const URL = "https://www.tvgids.nl/xmltv/epg.xml";
 
-function isPremiere(program) {
-  const title = program.title?.[0]?._ || "";
-  const desc = program.desc?.[0]?._ || "";
+async function run() {
+  try {
+    console.log("EPG downloaden...");
+    const response = await fetch(URL);
+    const xml = await response.text();
 
-  return (
-    /première/i.test(title) ||
-    /premiere/i.test(title) ||
-    /première/i.test(desc) ||
-    /premiere/i.test(desc)
-  );
-}
+    console.log("XML parsen...");
+    const result = await parseStringPromise(xml);
 
-async function fetchXml(url) {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`HTTP ${res.status} bij ${url}`);
-  return res.text();
-}
+    // Veilig uitlezen, ook als de feed leeg of anders gestructureerd is
+    const programmes = result?.tv?.programme ?? [];
 
-async function main() {
-  console.log("EPG ophalen…");
-  const xml = await fetchXml(EPG_URL);
+    console.log(`Aantal programma’s gevonden: ${programmes.length}`);
 
-  console.log("XML omzetten naar JSON…");
-  const parser = new xml2js.Parser();
-  const epg = await parser.parseStringPromise(xml);
+    // Filter op Vlaamse zenders
+    const vlaamseZenders = [
+      "één",
+      "canvas",
+      "vtm",
+      "vtm2",
+      "vtm3",
+      "vtm4",
+      "vier",
+      "vijf",
+      "zes",
+      "play4",
+      "play5",
+      "play6",
+      "play7",
+      "vtm gold"
+    ];
 
-  const programmes = epg.tv.programme || [];
-  const premieres = [];
+    const premieres = programmes.filter(p => {
+      const channel = p.$?.channel?.toLowerCase() ?? "";
+      return vlaamseZenders.includes(channel);
+    });
 
-  for (const p of programmes) {
-    if (isPremiere(p)) {
-      premieres.push({
-        title: p.title?.[0]?._ || "",
-        channel: p.$.channel,
-        start: p.$.start,
-        stop: p.$.stop,
-        description: p.desc?.[0]?._ || ""
-      });
+    console.log(`Aantal Vlaamse programma’s: ${premieres.length}`);
+
+    // Outputmap bestaat altijd
+    if (!fs.existsSync("data")) {
+      fs.mkdirSync("data");
     }
+
+    fs.writeFileSync(
+      "data/tv-premieres.json",
+      JSON.stringify(premieres, null, 2)
+    );
+
+    console.log("Klaar! tv-premieres.json bijgewerkt.");
+  } catch (err) {
+    console.error("Fout tijdens uitvoeren scraper:", err);
+    process.exit(1);
+  
   }
-
-  premieres.sort((a, b) => new Date(a.start) - new Date(b.start));
-
-  const outDir = "data";
-  const outFile = path.join(outDir, "tv-premieres.json");
-
-  if (!fs.existsSync(outDir)) fs.mkdirSync(outDir);
-
-  fs.writeFileSync(
-    outFile,
-    JSON.stringify(
-      {
-        generatedAt: new Date().toISOString(),
-        premieres
-      },
-      null,
-      2
-    ),
-    "utf8"
-  );
-
-  console.log(`Klaar! ${premieres.length} premières gevonden.`);
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+run();
