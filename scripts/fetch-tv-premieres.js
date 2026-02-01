@@ -1,43 +1,61 @@
-name: Fetch TV Premieres
+import { parseStringPromise } from "xml2js";
+import fs from "fs";
 
-on:
-  schedule:
-    - cron: "0 6 * * *"
-  workflow_dispatch:
+const URL = "https://www.tvgids.nl/xmltv/epg.xml";
 
-jobs:
-  fetch:
-    runs-on: ubuntu-latest
+async function run() {
+  try {
+    console.log("EPG downloaden...");
+    const response = await fetch(URL);
+    if (!response.ok) {
+      throw new Error(`HTTP-fout: ${response.status}`);
+    }
+    const xml = await response.text();
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    console.log("XML parsen...");
+    const result = await parseStringPromise(xml);
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
+    const programmes = result?.tv?.programme ?? [];
+    console.log(`Aantal programma’s gevonden: ${programmes.length}`);
 
-      - name: Install dependencies
-        working-directory: ${{ github.workspace }}/tv-premieres-vlaanderen
-        run: npm install
+    const vlaamseZenders = [
+      "één",
+      "canvas",
+      "vtm",
+      "vtm2",
+      "vtm3",
+      "vtm4",
+      "vier",
+      "vijf",
+      "zes",
+      "play4",
+      "play5",
+      "play6",
+      "play7",
+      "vtm gold"
+    ];
 
-      - name: Run scraper
-        working-directory: ${{ github.workspace }}/tv-premieres-vlaanderen
-        run: node scripts/fetch-tv-premieres.js
+    const premieres = programmes.filter(p => {
+      const channel = p.$?.channel?.toLowerCase() ?? "";
+      return vlaamseZenders.includes(channel);
+    });
 
-      - name: Commit changes if needed
-        working-directory: ${{ github.workspace }}/tv-premieres-vlaanderen
-        run: |
-          git config user.name "github-actions"
-          git config user.email "actions@github.com"
-          if ! git diff --quiet; then
-            git add data/tv-premieres.json
-            git commit -m "Automatische update van tv-premières"
-          else
-            echo "Geen wijzigingen, geen commit"
-          fi
+    console.log(`Aantal Vlaamse programma’s: ${premieres.length}`);
 
-      - name: Push changes
-        working-directory: ${{ github.workspace }}/tv-premieres-vlaanderen
-        run: git push
+    if (!fs.existsSync("data")) {
+      fs.mkdirSync("data");
+    }
+
+    fs.writeFileSync(
+      "data/tv-premieres.json",
+      JSON.stringify(premieres, null, 2)
+    );
+
+    console.log("Klaar! tv-premieres.json bijgewerkt.");
+  } catch (err) {
+    console.error("Fout tijdens uitvoeren scraper:", err);
+    process.exit(1);
+  }
+}
+
+run();
