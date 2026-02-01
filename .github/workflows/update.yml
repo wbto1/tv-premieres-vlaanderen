@@ -2,8 +2,8 @@ name: Fetch TV Premieres
 
 on:
   schedule:
-    - cron: "0 6 * * *"   # elke dag om 06:00 UTC
-  workflow_dispatch:       # handmatig starten via Actions-tab
+    - cron: "0 6 * * *"
+  workflow_dispatch:
 
 jobs:
   fetch:
@@ -13,23 +13,23 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
-          node-version: "20"
+          python-version: "3.11"
 
       - name: Install dependencies
-        run: npm install
+        run: pip install -r requirements.txt
 
       - name: Run scraper
-        run: npm run fetch
+        run: python scraper.py
 
       - name: Commit changes if needed
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
           if ! git diff --quiet; then
-            git add docs/data/tv-premieres.json
+            git add index.html
             git commit -m "Automatische update van tv-premières"
           else
             echo "Geen wijzigingen, geen commit"
