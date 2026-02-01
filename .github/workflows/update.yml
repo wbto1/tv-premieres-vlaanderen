@@ -13,31 +13,19 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Debug directory structure
-        run: |
-          echo "=== WORKSPACE PAD ==="
-          pwd
-          echo "=== BESTANDEN IN ROOT ==="
-          ls -R .
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "20"
 
       - name: Install dependencies
-        run: |
-          echo "=== INSTALLEREN VAN DEPENDENCIES ==="
-          npm install
+        run: npm install
 
       - name: Run scraper
-        run: |
-          echo "=== SCRAPER START ==="
-          node scripts/fetch-tv-premieres.js
+        run: npm run fetch
 
       - name: Commit changes if needed
         run: |
-          echo "=== CONTROLEREN OP WIJZIGINGEN ==="
           git config user.name "github-actions"
           git config user.email "actions@github.com"
           if ! git diff --quiet; then
@@ -48,7 +36,5 @@ jobs:
           fi
 
       - name: Push changes
-        run: |
-          echo "=== PUSHEN VAN WIJZIGINGEN ==="
-          git push
-          
+        run: git push
+        
