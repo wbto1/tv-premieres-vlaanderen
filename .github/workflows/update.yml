@@ -32,7 +32,7 @@ jobs:
             git add docs/data/tv-premieres.json
             git commit -m "Automatische update van tv-premières"
           else
-            echo "Geen wijzigingen"
+            echo "Geen wijzigingen, geen commit"
           fi
 
       - name: Push changes
