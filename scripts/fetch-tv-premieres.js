@@ -54,16 +54,17 @@ async function run() {
 
     console.log(`Aantal Vlaamse programma’s: ${premieres.length}`);
 
-    if (!fs.existsSync("data")) {
-      fs.mkdirSync("data");
+    // 👉 HIER: schrijven naar docs/data/
+    if (!fs.existsSync("docs/data")) {
+      fs.mkdirSync("docs/data", { recursive: true });
     }
 
     fs.writeFileSync(
-      "data/tv-premieres.json",
+      "docs/data/tv-premieres.json",
       JSON.stringify(premieres, null, 2)
     );
 
-    console.log("Klaar! tv-premieres.json bijgewerkt.");
+    console.log("Klaar! docs/data/tv-premieres.json bijgewerkt.");
   } catch (err) {
     console.error("Fout tijdens uitvoeren scraper:", err);
     process.exit(1);
