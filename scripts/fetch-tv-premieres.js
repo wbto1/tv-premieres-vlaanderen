@@ -6,16 +6,23 @@ const URL = "https://www.tvgids.nl/xmltv/epg.xml";
 async function run() {
   try {
     console.log("EPG downloaden...");
-    const response = await fetch(URL);
+    const response = await fetch(URL, {
+      headers: {
+        "User-Agent": "Mozilla/5.0"
+      }
+    });
+
     if (!response.ok) {
       throw new Error(`HTTP-fout: ${response.status}`);
     }
+
     const xml = await response.text();
 
     console.log("XML parsen...");
     const result = await parseStringPromise(xml);
 
     const programmes = result?.tv?.programme ?? [];
+
     console.log(`Aantal programma’s gevonden: ${programmes.length}`);
 
     const vlaamseZenders = [
