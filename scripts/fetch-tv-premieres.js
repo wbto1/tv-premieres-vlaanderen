@@ -1,20 +1,12 @@
 import { parseStringPromise } from "xml2js";
 import fs from "fs";
 
-const URL = "https://www.tvgids.nl/xmltv/epg.xml";
+const URL = "https://iptv-org.github.io/epg/guides/be.xml";
 
 async function run() {
   try {
     console.log("EPG downloaden...");
-    const response = await fetch(URL, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-        "Accept": "text/xml,application/xml,application/xhtml+xml",
-        "Accept-Language": "en-US,en;q=0.9",
-        "Referer": "https://www.tvgids.nl/",
-        "Connection": "keep-alive"
-      }
-    });
+    const response = await fetch(URL);
 
     if (!response.ok) {
       throw new Error(`HTTP-fout: ${response.status}`);
