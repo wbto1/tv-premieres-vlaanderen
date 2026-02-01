@@ -2,7 +2,7 @@ import fs from "fs";
 import { parseStringPromise } from "xml2js";
 
 const URLS = [
-  "https://epghub.online/epg/BE.xml"
+  "https://raw.githubusercontent.com/globetvapp/epg/main/Belgium/belgium1.xml"
 ];
 
 const VLAAMSE_ZENDERS = [
