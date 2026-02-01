@@ -1,7 +1,11 @@
 {
+  "name": "tv-premieres-vlaanderen",
+  "version": "1.0.0",
   "type": "module",
+  "scripts": {
+    "fetch": "node scripts/fetch-tv-premieres.js"
+  },
   "dependencies": {
-    "node-fetch": "^3.3.2",
-    "xml2js": "^0.4.23"
+    "xml2js": "^0.6.2"
   }
 }
