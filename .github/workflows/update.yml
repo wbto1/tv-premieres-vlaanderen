@@ -19,12 +19,15 @@ jobs:
           node-version: "20"
 
       - name: Install dependencies
+        working-directory: ${{ github.workspace }}/tv-premieres-vlaanderen
         run: npm install
 
       - name: Run scraper
+        working-directory: ${{ github.workspace }}/tv-premieres-vlaanderen
         run: node scripts/fetch-tv-premieres.js
 
       - name: Commit changes if needed
+        working-directory: ${{ github.workspace }}/tv-premieres-vlaanderen
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
@@ -36,4 +39,6 @@ jobs:
           fi
 
       - name: Push changes
+        working-directory: ${{ github.workspace }}/tv-premieres-vlaanderen
         run: git push
+        
