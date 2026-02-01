@@ -1,74 +1,40 @@
+import axios from "axios";
+import cheerio from "cheerio";
 import fs from "fs";
-import { parseStringPromise } from "xml2js";
 
-const URLS = [
-  "https://raw.githubusercontent.com/globetvapp/epg/main/Belgium/belgium1.xml"
-];
+// URL van jouw bron (pas aan indien nodig)
+const URL = "https://www.vrt.be/vrtnu/kalender/";
 
-const VLAAMSE_ZENDERS = [
-  "één",
-  "canvas",
-  "vtm",
-  "vtm2",
-  "vtm3",
-  "vtm4",
-  "vtm gold",
-  "vier",
-  "vijf",
-  "zes",
-  "play4",
-  "play5",
-  "play6",
-  "play7"
-];
-
-const normalize = str =>
-  str.toLowerCase().replace(".be", "").trim();
-
-async function run() {
+async function fetchPremieres() {
   try {
-    let allProgrammes = [];
+    const response = await axios.get(URL);
+    const $ = cheerio.load(response.data);
 
-    for (const url of URLS) {
-      console.log(`EPG downloaden van ${url}...`);
-      const response = await fetch(url);
+    const premieres = [];
 
-      if (!response.ok) {
-        console.log(`Fout bij ${url}: ${response.status}`);
-        continue;
+    $(".calendar-item").each((i, el) => {
+      const title = $(el).find(".title").text().trim();
+      const date = $(el).find(".date").text().trim();
+
+      if (title && date) {
+        premieres.push({ title, date });
       }
-
-      const xml = await response.text();
-      const result = await parseStringPromise(xml);
-      const programmes = result?.tv?.programme ?? [];
-
-      console.log(`Programma’s gevonden in ${url}: ${programmes.length}`);
-      allProgrammes = allProgrammes.concat(programmes);
-    }
-
-    console.log(`Totaal aantal programma’s: ${allProgrammes.length}`);
-
-    const premieres = allProgrammes.filter(p => {
-      const channel = normalize(p.$?.channel ?? "");
-      return VLAAMSE_ZENDERS.includes(channel);
     });
 
-    console.log(`Aantal Vlaamse programma’s: ${premieres.length}`);
-
-    if (!fs.existsSync("docs/data")) {
-      fs.mkdirSync("docs/data", { recursive: true });
-    }
+    const output = {
+      updated: new Date().toISOString(),
+      premieres
+    };
 
     fs.writeFileSync(
       "docs/data/tv-premieres.json",
-      JSON.stringify(premieres, null, 2)
+      JSON.stringify(output, null, 2)
     );
 
-    console.log("Klaar! docs/data/tv-premieres.json bijgewerkt.");
+    console.log("JSON succesvol geschreven!");
   } catch (err) {
-    console.error("Fout tijdens uitvoeren scraper:", err);
-    process.exit(1);
+    console.error("Fout bij ophalen:", err);
   }
 }
 
-run();
+fetchPremieres();
